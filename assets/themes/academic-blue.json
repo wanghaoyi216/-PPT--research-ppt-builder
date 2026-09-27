@@ -1,0 +1,18 @@
+{
+  "name": "academic-blue",
+  "template": "assets/themes/academic-blue.pptx",
+  "palette": {
+    "BAND": "006DB8",
+    "BORDER": "4472C4",
+    "ACC": "6096E6",
+    "SKY": "E8F2FB",
+    "TABBG": "D3D9E9",
+    "NUM": "7B8DBE",
+    "TINT": "F2F6FB",
+    "BROWN": "B39B77",
+    "INK": "0F1423",
+    "BODY": "262626",
+    "MUTED": "56646E",
+    "WHITE": "FFFFFF"
+  }
+}

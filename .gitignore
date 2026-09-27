@@ -1,0 +1,53 @@
+# ── 出稿产物与中间件 ────────────────────────────────────────────────
+out/
+_tmp/
+build/
+dist/
+*.egg-info/
+
+# LibreOffice 无头 profile（每次验证重建，几百个文件）
+.cache/
+_lo_profile/
+*_lo_profile/
+
+# ── 渲染中间件 ──────────────────────────────────────────────────────
+render/
+render2/
+render_split/
+render_split_kaiti/
+tpl_probe/
+probe/
+_mm/
+*.pdf.tmp
+
+# ── Python ─────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ── Node（analyze_template 用到 pptxgenjs 时的依赖）─────────────────
+node_modules/
+package-lock.json.bak
+
+# ── 编辑器 / 操作系统 ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── 编辑器与本机环境的临时产物 ──────────────────────────────────────
+*.log
+*.tmp
+*~
+.env
+.env.*

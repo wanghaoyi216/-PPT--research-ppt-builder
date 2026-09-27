@@ -1,0 +1,18 @@
+{
+  "name": "minimal-mono",
+  "template": "assets/themes/minimal-mono.pptx",
+  "palette": {
+    "BAND": "2F2F2F",
+    "BORDER": "3F3F3F",
+    "ACC": "B5532C",
+    "SKY": "EDEDED",
+    "TABBG": "DCDCDC",
+    "NUM": "5F5F5F",
+    "TINT": "F4F4F4",
+    "BROWN": "8C8C8C",
+    "INK": "111111",
+    "BODY": "262626",
+    "MUTED": "5A5A5A",
+    "WHITE": "FFFFFF"
+  }
+}

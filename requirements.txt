@@ -1,0 +1,23 @@
+# 中文科研汇报 PPT 生成器 · 运行环境
+#
+# 安装：pip install -r requirements.txt
+#
+# 外部依赖另有一样，不在 pip 里：
+#   LibreOffice（soffice）—— 渲染 PDF 供闸门二/三/四使用。
+#   它常常不在 PATH 上，必须给全路径：
+#     python scripts/verify_all.py --soffice "C:\Program Files\LibreOffice\program\soffice.exe"
+#     export SOFFICE=/usr/bin/soffice
+#   找不到时 verify_all.py 只跑闸门一，其余三道标 SKIP 并提示「不能算验收通过」。
+
+# 生成 pptx、读模板、改 XML
+python-pptx>=1.0.2
+
+# 闸门二/三/四：读渲染后的 PDF、算几何、对比度、版式覆盖
+pymupdf>=1.24
+
+# 图片宽高比实测（等比缩放与「拉伸」判定）、闸门一的西文字宽实测
+pillow>=10.0
+
+# 只有你要自己出实验图（scripts/figstyle.py）时才需要。
+# 不装它不影响 build_deck.py 与 verify_all.py——图一律走原生 PowerPoint 图表。
+matplotlib>=3.7
