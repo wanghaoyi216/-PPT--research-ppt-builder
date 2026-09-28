@@ -79,6 +79,11 @@ def In(v):
 NEUTRAL_THEME = {
     "name": "theme-neutral",
     "template": "assets/theme-neutral.pptx",
+    # 页面底色（六字符十六进制）。**刻意不放进 palette**：palette 的 WHITE 键是
+    # 「深色块上的文字」，和「页面底」是两件事——深色主题里页面底是深蓝、
+    # WHITE 仍是浅字（或者反过来，见 references/design-language.md §2c）。
+    # 旧 theme.json 没有这个字段时回落到 "FFFFFF"，行为与旧版完全一致。
+    "background": "FFFFFF",
     "palette": {
         "BAND": "006DB8",      # 标题带 / 结论带 / 强调数字：承白字 5.41:1
         "BORDER": "4472C4",    # 描边 2.25pt / 淡底上的强调字：白底 4.72:1
@@ -115,27 +120,33 @@ NEUTRAL_THEME = {
         "cover": "标题幻灯片",
         "content": "标题和内容",
         "two_col": "两栏内容",
+        "section": "节标题",
         "close": "末尾幻灯片",
     },
 }
 
-# ── 内置三套主题 ──
+# ── 内置六套主题 ──
 # 母版由 make_neutral_template.py --theme <name> 生成在 assets/themes/<name>.pptx，
 # 每套同时留一份 <name>.json 供本模块读。**色板改这里也要改那个脚本**——
 # 两处不一致时，母版是蓝的、页面是红的，比只有一套色板更糟。
 #
-# 每套的实测对比度与禁用场景写在 references/design-language.md §2b。
+# 每套的实测对比度与禁用场景写在 references/design-language.md §2b（三套浅色）
+# 与 §2c（midnight 深色 / forest-green / warm-sand）。
 # 选型口径：默认 academic-blue；投影偏暗或场合偏正式用 scholar-red；
-# 打印稿、外部评审、不想让人从颜色上先入为主时用 minimal-mono。
+# 打印稿、外部评审、不想让人从颜色上先入为主时用 minimal-mono；
+# 暗投影/路演/keynote/大屏用 midnight；环境、生态、材料、农业、地学用 forest-green；
+# 人文、社科、医学、报告附件用 warm-sand。
 BUILTIN_THEMES = {
     "academic-blue": {          # 内置中性主题的正式名（默认，向后兼容）
         "name": "academic-blue",
         "template": "assets/themes/academic-blue.pptx",
+        "background": "FFFFFF",
         "palette": dict(NEUTRAL_THEME["palette"]),
     },
     "scholar-red": {
         "name": "scholar-red",
         "template": "assets/themes/scholar-red.pptx",
+        "background": "FFFFFF",
         "palette": {
             "BAND": "8A2B34",      # 暗红标题带 / 结论带：承白字 8.48:1
             "BORDER": "9E3A44",    # 描边与淡底上的强调字：白底 6.68:1
@@ -154,6 +165,7 @@ BUILTIN_THEMES = {
     "minimal-mono": {
         "name": "minimal-mono",
         "template": "assets/themes/minimal-mono.pptx",
+        "background": "FFFFFF",
         "palette": {
             "BAND": "2F2F2F",      # 近黑灰标题带：承白字 13.39:1
             "BORDER": "3F3F3F",    # 描边与淡底上的强调字：白底 10.53:1
@@ -166,6 +178,68 @@ BUILTIN_THEMES = {
             "INK": "111111",       # 标题：18.88:1
             "BODY": "262626",      # 正文：15.13:1
             "MUTED": "5A5A5A",     # 弱化文字：6.90:1
+            "WHITE": "FFFFFF",
+        },
+    },
+    # ── 新增三套 ──
+    # midnight：深色底，第一个吃 `background` 字段的客户。整套色板做了**明度反转**：
+    # INK/BODY/MUTED 变浅字、WHITE 键变成「面板底」（见 references/design-language.md §2c），
+    # 所以 `panel()` 的默认填充必须是**调用时**才取的 WHITE，不能像原来那样在 def 时绑定
+    # 成 "FFFFFF"（否则深底主题里卡片会整片变白，浅色文字直接糊掉）。
+    "midnight": {
+        "name": "midnight",
+        "template": "assets/themes/midnight.pptx",
+        "background": "101C2E",    # 深海军蓝页面底
+        "palette": {
+            "BAND": "9AC7EE",      # 浅蓝标题带/结论带：承白字 5.25:1，底色上 9.59:1
+            "BORDER": "8FD3D0",    # 描边、headbar 底、淡底强调字：底色 10.10:1
+            "ACC": "A8CDF0",       # 只做装饰线：底色 10.31:1
+            "SKY": "304862",       # 只放在 BAND 上（5.28:1），底色上太暗不可用
+            "TABBG": "34536F",     # 编号标签底：承深字 7.33:1
+            "NUM": "7BA6CE",       # 编号圆：白字 20pt 粗体 3.65:1（大字，够）
+            "TINT": "2A4560",      # 深色卡片：承 BAND 字 5.56:1 / MUTED 5.71:1
+            "BROWN": "C9A86A",     # 纯装饰（暖金，深底上唯一暖色）：底色 7.57:1
+            "INK": "F0F5FB",       # 标题：底色 15.61:1
+            "BODY": "DCE6F2",      # 正文：底色 13.56:1
+            "MUTED": "B2C7DE",     # 弱化文字：底色 9.87:1，面板上 5.39:1
+            "WHITE": "31476B",     # 「面板底 / 深色块上的文字」：与 BAND 5.25:1
+        },
+    },
+    "forest-green": {
+        "name": "forest-green",
+        "template": "assets/themes/forest-green.pptx",
+        "background": "FFFFFF",
+        "palette": {
+            "BAND": "1B5E3A",      # 深绿标题带/结论带：承白字 7.75:1
+            "BORDER": "2E7D4F",    # 描边、headbar 底：白底 5.05:1
+            "ACC": "7A9A4E",       # 只做装饰线（橄榄）：白底 3.20:1，承不住小字
+            "SKY": "DCEEE1",       # 只放在 BAND 上（6.41:1），白底太浅不可用
+            "TABBG": "CFE0D5",     # 编号标签底：承深字 11.85:1
+            "NUM": "3F8F5E",       # 编号圆：白字 20pt 粗体 3.96:1（大字，够）
+            "TINT": "E8F2EC",      # 淡底卡片：承 BAND 字 6.77:1 / MUTED 4.94:1
+            "BROWN": "6E5B3E",     # 纯装饰（土色，生态/材料的暖调），白底 6.50:1
+            "INK": "10241A",       # 标题：白底 16.29:1
+            "BODY": "22302A",      # 正文：白底 13.78:1
+            "MUTED": "5A6B61",     # 弱化文字：白底 5.66:1
+            "WHITE": "FFFFFF",
+        },
+    },
+    "warm-sand": {
+        "name": "warm-sand",
+        "template": "assets/themes/warm-sand.pptx",
+        "background": "FBF7F1",    # 很浅的暖白页面底（走 `background` 字段）
+        "palette": {
+            "BAND": "8A5A2B",      # 赭褐标题带/结论带：承白字 5.87:1
+            "BORDER": "9A6633",    # 描边、headbar 底：暖底 4.55:1
+            "ACC": "AE7C48",       # 只做装饰线：暖底 3.41:1，承不住小字
+            "SKY": "F3E7D8",       # 只放在 BAND 上（4.82:1），暖底太浅不可用
+            "TABBG": "E6D3BC",     # 编号标签底：承深字 11.71:1
+            "NUM": "6B4A24",       # 编号圆：白字 20pt 粗体 7.98:1
+            "TINT": "F6ECDD",      # 淡底卡片：承 BAND 字 5.02:1 / MUTED 5.28:1
+            "BROWN": "A08562",     # 纯装饰（驼色），暖底 3.27:1，绝不承文字
+            "INK": "241A10",       # 标题：暖底 15.99:1
+            "BODY": "332A20",      # 正文：暖底 13.18:1
+            "MUTED": "6E5F4C",     # 弱化文字：暖底 5.78:1
             "WHITE": "FFFFFF",
         },
     },
@@ -203,6 +277,11 @@ BODY = "262626"
 MUTED = "56646E"
 WHITE = "FFFFFF"
 
+# 页面底色。**导出给闸门三（qa_visual.py）用**：它拿这个当「矢量填充查不到时的
+# 回落底色」，深色主题不改这里就会把蓝底白字判成白底白字、全篇误报。
+# 初值必须和 NEUTRAL_THEME["background"] 一致；import 后即可读，之后以 apply_theme 为准。
+PAGE_BG = "FFFFFF"
+
 # ── 字体（会被 apply_theme 覆写）──
 LAT = "Times New Roman"
 EAK = "微软雅黑"
@@ -213,6 +292,7 @@ FORM = "Times New Roman"
 LCOVER = "标题幻灯片"
 LCONTENT = "标题和内容"
 LTWOCOL = "两栏内容"
+LSECTION = "节标题"      # 章节分隔页：内置母版有这个版式但以前没人映射，见 §2c
 LCLOSE = "末尾幻灯片"
 
 TPL = ""            # 基座模板路径，apply_theme 解析
@@ -240,8 +320,8 @@ def apply_theme(theme: dict) -> dict:
     """
     global M, CW, FTY, FOOT_TOP, PAGE_W, PAGE_H, CT_TOP, CT_BOT, R
     global BAND, BORDER, ACC, SKY, TABBG, TINT, BROWN, INK, BODY, MUTED, WHITE
-    global NUM_FILL, LAT, EAK, NUMF, FORM, TPL, LAYOUTS, R
-    global LCOVER, LCONTENT, LTWOCOL, LCLOSE
+    global NUM_FILL, PAGE_BG, LAT, EAK, NUMF, FORM, TPL, LAYOUTS, R
+    global LCOVER, LCONTENT, LTWOCOL, LSECTION, LCLOSE
     global _ACTIVE_THEME
 
     pal = dict(NEUTRAL_THEME["palette"])
@@ -251,6 +331,12 @@ def apply_theme(theme: dict) -> dict:
         globals()[k] = pal[k]
     # 「编号圆」在设计语言里叫 NUM（色名），和字体的 NUMF（数字字体）区分开
     NUM_FILL = pal["NUM"]
+
+    # 页面底色：旧 theme.json 没有 background 键时回落到中性主题的 FFFFFF，
+    # 于是老主题文件的行为一字不变；新主题给了这个键才走深色底。
+    background = (theme.get("background") or dict(NEUTRAL_THEME).get("background")
+                  or "FFFFFF").upper()
+    PAGE_BG = background
 
     f = dict(NEUTRAL_THEME["fonts"])
     f.update(theme.get("fonts") or {})
@@ -269,13 +355,17 @@ def apply_theme(theme: dict) -> dict:
     LCOVER = LAYOUTS["cover"]
     LCONTENT = LAYOUTS["content"]
     LTWOCOL = LAYOUTS.get("two_col", LAYOUTS["content"])
+    # section 是唯一可有可无的角色：老模板没有「节标题」版式时回退到 content，
+    # 与 two_col 的降级路径一致（check_template 会打一行 WARN）。
+    LSECTION = LAYOUTS.get("section", LAYOUTS["content"])
     LCLOSE = LAYOUTS["close"]
 
     tpl = theme.get("template") or NEUTRAL_THEME["template"]
     p = Path(tpl)
     TPL = str(p if p.is_absolute() else (PKG / p))
     _ACTIVE_THEME = {"name": theme.get("name", "theme"), "template": TPL,
-                     "palette": pal, "fonts": f, "grid": g, "layouts": LAYOUTS}
+                     "background": PAGE_BG, "palette": pal, "fonts": f,
+                     "grid": g, "layouts": LAYOUTS}
     return dict(_ACTIVE_THEME)
 
 
@@ -315,10 +405,10 @@ def load_theme(path=None, name=None) -> dict:
 def check_template() -> str:
     """确认基座模板在，且要求的版式都在。缺版式要明确报错，不静默降级。
 
-    two_col 是唯一允许降级的角色（页面可选），但**降级必须打一行告警**：
-    模板没有两栏版式却照跑 two_col 页面，构图会整块塌掉，且闸门查不出来。
+    two_col 与 section 是仅有的两个允许降级的角色（页面可选），但**降级必须打一行告警**：
+    模板没有对应版式却照跑，构图会整块塌掉，且闸门查不出来。
     """
-    global LAYOUTS, LTWOCOL
+    global LAYOUTS, LTWOCOL, LSECTION
     if not Path(TPL).exists():
         raise FileNotFoundError(
             f"基座模板不存在：{TPL}\n"
@@ -345,6 +435,12 @@ def check_template() -> str:
               f"要真两栏请在 theme.json 的 layouts.two_col 里指定。")
         LAYOUTS["two_col"] = LCONTENT
         LTWOCOL = LCONTENT
+    if LSECTION not in names:
+        print(f"  [WARN] 模板 {Path(TPL).name} 没有章节版式「{LSECTION}」"
+              f"——section 页面回退到「{LCONTENT}」（会带着正文页的标题带）。"
+              f"要真分隔页请在 theme.json 的 layouts.section 里指定。")
+        LAYOUTS["section"] = LCONTENT
+        LSECTION = LCONTENT
     return TPL
 
 
@@ -512,7 +608,8 @@ def save_deck(prs, deck: dict):
 
 
 # ── 页面原语 ──
-_ROLE_ALIAS = {"cover": "cover", "content": "content", "two_col": "two_col", "close": "close"}
+_ROLE_ALIAS = {"cover": "cover", "content": "content", "two_col": "two_col",
+               "section": "section", "close": "close"}
 
 
 def resolve_layout(name_or_role: str) -> str:
@@ -650,9 +747,14 @@ def rect(s, x, y, w, h, fill=None, line=None, lw=2.25, alpha=None,
     return sh
 
 
-def panel(s, x, y, w, h, fill=WHITE, line=None, lw=2.25):
-    """内容框：白底 + 描边。line=None 时取主题的 BORDER。"""
-    return rect(s, x, y, w, h, fill=fill, line=line or BORDER, lw=lw)
+def panel(s, x, y, w, h, fill=None, line=None, lw=2.25):
+    """内容框：白底 + 描边。line=None 时取主题的 BORDER。
+
+    `fill` 的默认值必须是 None 而不是 WHITE：**默认参数在 def 时就绑定**，
+    绑成 "FFFFFF" 的话 apply_theme() 换了主题也不生效——midnight 这类深色主题
+    下所有卡片会整片变白，浅色正文直接糊在上面。调用时再取 WHITE 才跟着主题走。
+    """
+    return rect(s, x, y, w, h, fill=fill or WHITE, line=line or BORDER, lw=lw)
 
 
 def rule(s, x, y, w, color=None, h=0.016):
@@ -761,11 +863,11 @@ def foot(s, n):
         align=PP_ALIGN.RIGHT, anchor=MSO_ANCHOR.MIDDLE, role="page_no")
 
 
-def headbar(s, x, y, w, text, h=0.46, size=15.5, fill=None, color=WHITE, xpad=0.26):
-    """卡片顶部的深色标题条。"""
+def headbar(s, x, y, w, text, h=0.46, size=15.5, fill=None, color=None, xpad=0.26):
+    """卡片顶部的深色标题条。`color` 默认取 WHITE（深色块上的文字），调用时才取。"""
     fill = fill or BORDER
     rect(s, x, y, w, h, fill=fill, line=None)
-    txt(s, x + xpad, y, w - 2 * xpad, h, [(text, size, True)], color=color,
+    txt(s, x + xpad, y, w - 2 * xpad, h, [(text, size, True)], color=color or WHITE,
         anchor=MSO_ANCHOR.MIDDLE)
 
 
@@ -780,13 +882,16 @@ def chip(s, x, y, w, h, no, label, size=16, num_size=20):
 
 
 # ── 表格 ──
-def _cell_ln(c, color="FFFFFF", w=9525):
+def _cell_ln(c, color=None, w=9525):
     """写单元格四边框。
 
     两条约束：① <a:lnL/lnR/lnT/lnB> 必须排在 <a:tcPr> 最前且互按此序；
     ② 单元格描边要在**设填充之前**写——OOXML 要求边框元素排在 solidFill 前面，
     顺序非法的话 PowerPoint 会忽略这段边框。所以 table() 里先 _cell_ln 再 fill。
+
+    `color` 默认 None → 取 WHITE（浅色主题里就是 FFFFFF，行为不变）。
     """
+    color = color or WHITE
     tcPr = c._tc.get_or_add_tcPr()
     for tag in ("a:lnBlToTr", "a:lnTlToBr", "a:lnB", "a:lnT", "a:lnR", "a:lnL"):
         for o in tcPr.findall(qn(tag)):
@@ -803,10 +908,14 @@ def _cell_ln(c, color="FFFFFF", w=9525):
         tcPr.insert(0, ln)
 
 
-def table(s, x, y, colW, rows, rowH=0.50, hdr_fill=None, hdr_color=WHITE,
+def table(s, x, y, colW, rows, rowH=0.50, hdr_fill=None, hdr_color=None,
           hdr_size=12.5, body_size=13, zebra=None):
-    """rows[i][j] = 文本 或 (文本, size|None, bold|None, color, align)。"""
+    """rows[i][j] = 文本 或 (文本, size|None, bold|None, color, align)。
+
+    `hdr_color` 默认 None → 取 WHITE（调用时才取，理由同 `panel()` 的 `fill`）。
+    """
     hdr_fill = hdr_fill or BORDER
+    hdr_color = hdr_color or WHITE
     zebra = zebra or TINT
     nrow, ncol = len(rows), len(colW)
     g = s.shapes.add_table(nrow, ncol, In(x), In(y), In(sum(colW)), In(rowH * nrow))

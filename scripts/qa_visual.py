@@ -42,7 +42,17 @@ LARGE_MIN = 3.0   # 大字对比度门槛
 SMALL_MIN = 4.5   # 小字对比度门槛
 
 FOOT_NUM = re.compile(r"^\d{1,3} / \d{1,3}$")
-BG = (255, 255, 255)   # 页面底色：白底设计。深底主题改这里
+
+# 页面底色。默认 FFFFFF（中性 / 三套浅色主题），但**真正的来源是主题的 background
+# 字段**（kit.PAGE_BG）——原来这里写死白，是因为整套对比度系统都建立在白底上；
+# 深色主题不改这一行，深蓝底上的白字会被当成「白底白字」判成 1:1，全篇误报。
+#
+# 取值优先级（resolve_bg 里实现）：--bg <hex> 显式 > kit.PAGE_BG > PDF 里的整页填充矩形
+# > BG_DEFAULT。最后两级是为了让本脚本**独立运行时也不误报**：单独
+# `python qa_visual.py x.pdf` 时 kit 是全新 import、apply_theme 没跑过，
+# 这时靠 PDF 自带的那块整页背景矩形自己把底色找出来。
+BG_DEFAULT = (255, 255, 255)
+BG = BG_DEFAULT
 
 
 def unhex(c):
@@ -62,6 +72,66 @@ def ratio(a, b):
     la, lb = lum(a), lum(b)
     hi, lo = (la, lb) if la >= lb else (lb, la)
     return (hi + 0.05) / (lo + 0.05)
+
+
+def kit_bg():
+    """kit 里当前生效主题的页面底色。
+
+    kit 不可用、或 import 后还没调 apply_theme（PAGE_BG 停在 FFFFFF）时返回 None，
+    让调用方走下一级。
+    """
+    try:
+        import kit
+    except Exception:
+        return None
+    try:
+        v = str(getattr(kit, "PAGE_BG", "") or "").strip().lstrip("#")
+    except Exception:
+        return None
+    if len(v) != 6 or not re.fullmatch(r"[0-9A-Fa-f]{6}", v):
+        return None
+    c = unhex(int(v, 16))
+    return c if c != BG_DEFAULT else None
+
+
+def pdf_page_bg(doc):
+    """从渲染结果里找页面底色：取最底层那块几乎占满整页的填充矩形的颜色。
+
+    make_neutral_template 把页面底色写成母版的 <p:bg>，LibreOffice 会把它导出成
+    一块满页填充矩形，所以答案就在 PDF 里。用众数是因为多页可能有细微差异
+    （不同版式的背景块），取出现最多的那个。
+    """
+    cnt = {}
+    for page in doc:
+        W, H = page.rect.width, page.rect.height
+        for r, c in shapes(page):
+            if r.width < 0.92 * W or r.height < 0.92 * H:
+                continue          # 只认满页背景，正文页的大卡片不算
+            cnt[c] = cnt.get(c, 0) + 1
+    if not cnt:
+        return None
+    c = max(cnt.items(), key=lambda kv: kv[1])[0]
+    return c if c != BG_DEFAULT else None
+
+
+def resolve_bg(explicit="", doc=None):
+    """按可靠性从高到低定出本次判定的页面底色，写回模块级 BG 并返回它。
+
+    `doc` 给了才走 PDF 兜底那一级——它要读页面，得在 main() 里开了文档之后调。
+    """
+    global BG
+    if explicit:
+        BG = unhex(int(explicit.lstrip("#"), 16))
+        return BG
+    c = kit_bg()
+    if c:
+        BG = c
+        return BG
+    if doc is not None:
+        c = pdf_page_bg(doc)
+        if c:
+            BG = c
+    return BG
 
 
 def shapes(page):
@@ -130,8 +200,11 @@ def host_at(rects, pt):
     return best
 
 
-def main(pdf):
+def main(pdf, bg=""):
     doc = fitz.open(pdf)
+    BG = resolve_bg(bg, doc)      # 页面底色跟主题走，见 BG_DEFAULT 处的说明
+    if BG != BG_DEFAULT:
+        print(f"页面底色 {BG}")
     bad = 0
     worst = []
 
@@ -202,7 +275,13 @@ def main(pdf):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    args = sys.argv[1:]
+    bg = ""
+    if "--bg" in args:
+        i = args.index("--bg")
+        bg = args[i + 1]
+        del args[i:i + 2]
+    if not args:
         print(__doc__)
         sys.exit(2)
-    sys.exit(main(sys.argv[1]))
+    sys.exit(main(args[0], bg))

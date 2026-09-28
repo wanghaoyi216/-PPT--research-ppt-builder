@@ -1,6 +1,7 @@
 {
   "name": "minimal-mono",
   "template": "assets/themes/minimal-mono.pptx",
+  "background": "FFFFFF",
   "palette": {
     "BAND": "2F2F2F",
     "BORDER": "3F3F3F",

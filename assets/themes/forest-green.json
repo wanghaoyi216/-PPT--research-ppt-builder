@@ -1,0 +1,19 @@
+{
+  "name": "forest-green",
+  "template": "assets/themes/forest-green.pptx",
+  "background": "FFFFFF",
+  "palette": {
+    "BAND": "1B5E3A",
+    "BORDER": "2E7D4F",
+    "ACC": "7A9A4E",
+    "SKY": "DCEEE1",
+    "TABBG": "CFE0D5",
+    "NUM": "3F8F5E",
+    "TINT": "E8F2EC",
+    "BROWN": "6E5B3E",
+    "INK": "10241A",
+    "BODY": "22302A",
+    "MUTED": "5A6B61",
+    "WHITE": "FFFFFF"
+  }
+}

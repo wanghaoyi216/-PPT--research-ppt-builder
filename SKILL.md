@@ -1,6 +1,6 @@
 ---
 name: research-ppt-builder
-description: 生成中文科研汇报 PPT（组会、项目答辩、开题/中期、学术汇报）时使用。基于用户自己的 .pptx 模板或内置中性母版出稿，自动排版、生成演讲者备注与讲稿，并用四道自动闸门（文字溢出 / 渲染几何 / 对比度 / 版面空隙）验收。内置三套配色主题（academic-blue / scholar-red / minimal-mono）与一套 matplotlib 图表风格预设。触发词包括：组会 PPT、汇报 PPT、答辩 PPT、开题/中期报告 PPT、报告幻灯片、仿某个 pptx 模板出稿、把论文/实验做成幻灯片、科研配图排版。
+description: 生成中文科研汇报 PPT（组会、项目答辩、开题/中期、学术汇报）时使用。基于用户自己的 .pptx 模板或内置中性母版出稿，自动排版、生成演讲者备注与讲稿，并用四道自动闸门（文字溢出 / 渲染几何 / 对比度 / 版面空隙）验收。内置六套配色主题（academic-blue / scholar-red / minimal-mono / midnight / forest-green / warm-sand）与五套 matplotlib 图表风格预设（含深色底与散点预设，可用 use_theme 和页面共用同一套色板）。触发词包括：组会 PPT、汇报 PPT、答辩 PPT、开题/中期报告 PPT、报告幻灯片、仿某个 pptx 模板出稿、把论文/实验做成幻灯片、科研配图排版。
 ---
 
 # 中文科研汇报 PPT 生成器
@@ -39,13 +39,17 @@ description: 生成中文科研汇报 PPT（组会、项目答辩、开题/中�
 | 配色偏好 | 沿用模板 / 深色 / 指定色 | 决定用哪套内置主题，见下表 |
 | 中英文字体 | 中文微软雅黑/楷体；西文默认 Times New Roman | 决定 `theme.json` 的 `fonts` |
 
-**主题三选一**（三套的栅格与字体完全相同，只换色板与母版装饰色）：
+**主题六选一**（六套的栅格与字体完全相同，只换色板与母版装饰色；
+前四套白底，`midnight` 是深底、`warm-sand` 是暖底）：
 
 | 主题 | 什么时候用 |
 |---|---|
 | `academic-blue`（默认） | 组会、学术会议、对外介绍。亮投影环境。**没明确要求就用它** |
 | `scholar-red` | 开题/中期、答辩、项目评审。正式场合，红色更「像结论」；红底在偏色投影上会偏紫 |
 | `minimal-mono` | 打印稿、投稿附件、外部评审；不希望颜色先入为主时。亮暗环境都可 |
+| `midnight` | 暗室投影、keynote、大屏发布。唯一深底主题，页面底色走 `background` 字段，`qa_visual.py` 会自动按它判对比度 |
+| `forest-green` | 环境、生态、材料、农业、地质类课题。白底，深绿主色，比蓝/红更适合这类题材 |
+| `warm-sand` | 人文、社科、医学、报告附录。很浅的暖底（`FBF7F1`），比纯白柔和，长文阅读不刺眼 |
 
 ```powershell
 python scripts\make_neutral_template.py --theme scholar-red   # 首次切换时生成母版
@@ -53,6 +57,10 @@ python scripts\build_deck.py --theme scholar-red                # 出稿
 ```
 或代码里 `kit.load_theme(name="minimal-mono")`（必须在建 deck 之前调用）。
 色板定义在 `kit.BUILTIN_THEMES`，母版生成脚本读的是同一份。
+
+**配图要跟主题走**：`figstyle.use_theme("scholar-red")` 把 `kit` 当前色板灌进 matplotlib，
+否则页面是红的、图里的柱还是蓝的。不传参数就是旧行为，`figstyle.py` 也能脱离 `kit.py` 单独跑。
+深色主题会自动切到 `dark` 预设（深画布 + 浅字 + 淡网格），不用手动指定。
 
 **图片情况必须让用户显式声明**（有图 / 无图 / 有图但文件名是 `1.png` 这种）。
 不要靠目录里有没有图片文件来猜。
@@ -99,7 +107,9 @@ python scripts\build_deck.py --theme scholar-red                # 出稿
 1. 复制 `scripts/build_deck.py` 为你的 `build.py`；
 2. 改 `DECK`（标题、页脚、页数）与 `PAGES`（页面函数清单）；
 3. 每个页型从 `references/page-recipes.md` 里挑，照几何改文案；
-4. 视觉规格照 `references/design-language.md`（色板、栅格、字体三条铁律都在里面）。
+4. 视觉规格照 `references/design-language.md`（色板、栅格、字体三条铁律都在里面）；
+5. **标题与措辞照 `references/design-principles.md`**：标题要说出结论而不是主题名，
+   交付前按那份文档末尾的自检清单过一遍（七类 AI 味的词全文搜一遍，命中数归零）。
 
 ```powershell
 python scripts\build_deck.py                       # → out/示例汇报_中文科研组会.pptx
@@ -181,10 +191,11 @@ python scripts\verify_all.py --soffice "C:\Program Files\LibreOffice\program\sof
 
 | 文件 | 什么时候读 |
 |---|---|
-| `references/design-language.md` | 排版前必读：色板（含实测对比度与禁用场景）、**三套主题**、栅格常量、字体策略与两条实现铁律 |
+| `references/design-language.md` | 排版前必读：色板（含实测对比度与禁用场景）、**六套主题**（含唯一暗底 `midnight`）、栅格常量、字体策略与两条实现铁律 |
+| `references/design-principles.md` | 写第一页之前读一遍：**标题怎么写、什么算风格统一、内容该上屏还是上讲稿、数字怎么算才不出错**。讲判断，不讲数值；数值在上面那份里 |
 | `references/figures-and-charts.md` | 有任何图表时：原生图表 vs matplotlib 出图的分工、原生样式参数、量级差三种解法、matplotlib 十条技法与那个最大的坑 |
 | `references/template-intake.md` | 用户自带模板时 |
-| `references/page-recipes.md` | 写每一页之前：十五种页型的几何与排法（含时间线、四象限、KPI 数字墙、two_col 两栏页） |
+| `references/page-recipes.md` | 写每一页之前：十八种页型的几何与排法（含章节分隔、金句引言、前后对比、数据结论，以及时间线、四象限、KPI 数字墙、two_col 两栏页） |
 | `references/image-handling.md` | 有图时 |
 | `references/narration.md` | 写讲稿、订口径 |
 | `references/qa-gates.md` | 闸门报错要调阈值时 |
@@ -196,9 +207,9 @@ python scripts\verify_all.py --soffice "C:\Program Files\LibreOffice\program\sof
 |---|---|
 | `scripts/kit.py` | 组件库：色板/栅格/字体（读 `theme.json`）、`txt/rect/panel/rule/fig/fig_fit/head/foot/chip/headbar/table`、`column_chart/hbar_chart/value_labels/missing_marks`、`open_base/start_deck/save_deck/notes/write_script_md`、`scrub_metadata`（擦 docProps） |
 | `scripts/build_deck.py` | 十五页示例 deck（纯排版路线 + 四道闸门的回归基线），新稿照它改 |
-| `scripts/figstyle.py` | matplotlib 风格预设（`use_preset` / `despine` / `label_bars` / `mark_missing` / `finish`），三套预设；直接跑一次生成 `assets/figures/` 示例图 |
+| `scripts/figstyle.py` | matplotlib 风格预设（`use_preset` / `use_theme` / `despine` / `label_bars` / `mark_missing` / `finish`），五套预设（default / dense / mono / scatter / dark）；直接跑一次生成 `assets/figures/` 示例图 |
 | `scripts/analyze_template.py` | 从任意 `.pptx` 反推视觉语言，输出 `theme.json` |
-| `scripts/make_neutral_template.py` | **可复现**地重新生成母版：`--theme academic-blue`（默认）/ `scholar-red` / `minimal-mono`，并打印该主题每个颜色的实测对比度 |
+| `scripts/make_neutral_template.py` | **可复现**地重新生成母版：`--theme academic-blue`（默认）/ `scholar-red` / `minimal-mono` / `midnight` / `forest-green` / `warm-sand`，并打印该主题每个颜色在页面底色上的实测对比度 |
 | `scripts/qa_fit.py` `qa_pdf.py` `qa_visual.py` `qa_layout.py` | 四道闸门，阈值都在文件顶部 |
 | `scripts/verify_all.py` | 跨平台一键：构建 → 渲染 → 四闸门 |
 

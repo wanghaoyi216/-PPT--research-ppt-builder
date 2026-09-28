@@ -6,7 +6,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![离线运行](https://img.shields.io/badge/运行方式-本地%20离线%20不上传-2ea44f)](#需要装什么)
-[![主题](https://img.shields.io/badge/内置主题-3%20套-0072B2)](#三套主题)
+[![主题](https://img.shields.io/badge/内置主题-6%20套-0072B2)](#六套主题)
 [![验收](https://img.shields.io/badge/验收闸门-4%20道-success)](#四道闸门)
 [![许可证](https://img.shields.io/badge/许可证-MIT-lightgrey)](LICENSE)
 
@@ -21,11 +21,12 @@ research-ppt-builder/
 ├── README_EN.md          English
 ├── requirements.txt
 ├── assets/
-│   ├── themes/           三套主题母版 + 色板定义（pptx / json）
+│   ├── themes/           六套主题母版 + 色板定义（pptx / json，含一套暗底）
 │   └── figures/          matplotlib 出图示例
 ├── references/           深入资料，按需查阅
 │   ├── design-language.md     色板、栅格、字体：为什么这么定
-│   ├── page-recipes.md        十余种页型的几何配方
+│   ├── design-principles.md   设计技巧：标题、层级、边界、布局的判断标准
+│   ├── page-recipes.md        十八种页型的几何配方
 │   ├── figures-and-charts.md  图表：原生图 vs matplotlib 怎么选
 │   ├── image-handling.md      配图的三种处理方式
 │   ├── template-intake.md     接入你自己的 pptx 模板
@@ -47,7 +48,7 @@ research-ppt-builder/
 
 这个项目适合用 Python 生成科研汇报、开题、中期汇报、答辩、项目评审和学术报告 PPT。你可以：
 
-- 使用自己的 `.pptx` 模板，也可以使用内置的三套主题；
+- 使用自己的 `.pptx` 模板，也可以使用内置的六套主题；
 - 不提供模板，直接使用内置主题生成一份基础汇报稿；
 - 把实验背景、方法、结果和结论整理成多种常用页型；
 - 同时生成幻灯片备注和逐页 markdown 讲稿，避免两份内容不一致；
@@ -139,7 +140,7 @@ python scripts\analyze_template.py "assets\my-template.pptx" -o assets\my-theme.
 
 ## 它能做什么
 
-**支持三种出稿方式。** 可以使用自己的 `.pptx` 模板，沿用里面的版式、配色和装饰；也可以使用内置的三套主题；如果没有模板，也可以直接用内置主题和页型生成基础汇报稿。后两种方式更依赖预设规则，视觉一致性通常不如专用模板。
+**支持三种出稿方式。** 可以使用自己的 `.pptx` 模板，沿用里面的版式、配色和装饰；也可以使用内置的六套主题；如果没有模板，也可以直接用内置主题和页型生成基础汇报稿。后两种方式更依赖预设规则，视觉一致性通常不如专用模板。
 
 **自动配讲稿。** 幻灯片和讲稿读同一份数据。写进备注的是讲稿，导出成 markdown 的也是它，
 数字不会对不上。
@@ -150,7 +151,7 @@ python scripts\analyze_template.py "assets\my-template.pptx" -o assets\my-theme.
 **三种配图方式。** 无图、图已经命名好（你指定放哪页哪个位置，它不认也不改）、
 图是 `1.png` `2.jpg` 这种没意义的文件名（它自己看图判断放哪、配什么图注，然后交你确认）。
 
-**三套主题。** 商务蓝、学术红、极简黑白。三套都跑过四道闸门。
+**六套主题。** 商务蓝、学术红、极简黑白，另加暗底 midnight、深绿 forest-green、暖白 warm-sand。六套都跑过四道闸门。
 
 **图表两种做法。** 默认用 PowerPoint 原生图表（可编辑、体积小）；
 需要复杂样式时用 matplotlib 出图，配一套现成的风格预设。
@@ -260,15 +261,16 @@ python scripts\analyze_template.py "D:\你的模板.pptx" -o theme.json
 
 阈值能调，但**先查是不是量错了**，别直接放宽。调法见 [`references/qa-gates.md`](references/qa-gates.md)。
 
-## 三套主题
+## 六套主题
 
-栅格和字体三套一样，只换色板和母版装饰色。
+栅格和字体六套一样，只换色板、页面底色和母版装饰色。
 
-| | academic-blue | scholar-red | minimal-mono |
-|---|---|---|---|
-| 基色 | `006DB8` | `8A2B34` | `2F2F2F` + 陶土橙 |
-| 适合 | 组会汇报（优先沿用原始模板风格）、学术报告、对外介绍 | 开题/中期、答辩 | 黑白打印、外部评审 |
-| 投影 | 亮环境 | 亮环境，偏色投影上红会偏紫 | 亮暗都行 |
+| | academic-blue | scholar-red | minimal-mono | midnight | forest-green | warm-sand |
+|---|---|---|---|---|---|---|
+| 底色 | 白 | 白 | 白 | 深海军蓝 `101C2E` | 白 | 暖白 `FBF7F1` |
+| 基色 | `006DB8` | `8A2B34` | `2F2F2F` + 陶土橙 | 浅蓝 `9AC7EE` | 深绿 `1B5E3A` | 暖褐 `8A5A2B` |
+| 适合 | 组会汇报、学术报告、对外介绍 | 开题/中期、答辩 | 黑白打印、外部评审 | 大屏投影、keynote、暗环境 | 环境/生态/材料/地学课题 | 人文/社科/医学、报告附录 |
+| 投影 | 亮环境 | 亮环境，偏色投影上红会偏紫 | 亮暗都行 | 暗环境首选 | 亮环境 | 亮环境 |
 
 完整色板、每个色的实测对比度、什么时候不能用哪一档，在
 [`references/design-language.md`](references/design-language.md)。

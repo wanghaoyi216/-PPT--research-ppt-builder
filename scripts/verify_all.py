@@ -44,6 +44,24 @@ BASE = Path(__file__).resolve().parent
 PKG = BASE.parent
 GATES_PDF = ["qa_pdf.py", "qa_visual.py", "qa_layout.py"]
 
+def theme_background(theme: str) -> str:
+    """主题名 → 页面底色（主题 schema 顶层的 background 字段）。
+
+    闸门三要知道底色，否则深色主题会把「深蓝底白字」判成「白底白字」全篇误报。
+    取不到就返回空串：qa_visual 自己会从 PDF 的整页背景矩形里把底色找出来，
+    只是那样不如直接给准确。
+    """
+    if not theme:
+        return ""
+    try:
+        if str(BASE) not in sys.path:
+            sys.path.insert(0, str(BASE))
+        import kit
+        return str(kit.BUILTIN_THEMES[theme].get("background", "") or "")
+    except Exception:
+        return ""
+
+
 SOFFICE_CANDIDATES = [
     r"C:\Program Files\LibreOffice\program\soffice.exe",
     r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
@@ -141,7 +159,10 @@ def main():
     # 和「不换主题也要重跑」是同一条纪律，所以这里必须能一键跑完主题变体；
     # 否则 verify_all 只能用默认主题验，改了主题的稿子就处在没验收过的状态。
     ap.add_argument("--theme", default="",
-                    help="透传给 build 脚本的主题名（academic-blue/scholar-red/minimal-mono）")
+                    help="透传给 build 脚本的主题名："
+                         "academic-blue / scholar-red / minimal-mono / midnight / "
+                         "forest-green / warm-sand。除了换色板，也据此把页面底色喂给闸门三——"
+                         "深色主题不给底色，qa_visual 会把深底白字判成白底白字。")
     ap.add_argument("--tail", type=int, default=25, help="闸门失败时打印的尾部行数")
     a = ap.parse_args()
 
@@ -219,7 +240,10 @@ def main():
     if pdf:
         # qa_pdf 需要认出页脚那句口号，否则会把页脚误报成「压页脚」。
         # 清单里 role=footer 的文本块就是它。
-        for g, extra in ((GATES_PDF[0], ["--manifest", manifest]), (GATES_PDF[1], []),
+        # qa_visual 需要页面底色：深色主题不给就会把深底白字判成白底白字。
+        bg = theme_background(a.theme)
+        for g, extra in ((GATES_PDF[0], ["--manifest", manifest]),
+                         (GATES_PDF[1], (["--bg", bg] if bg else [])),
                          (GATES_PDF[2], [])):
             ok, out = run_gate(g, [pdf] + extra)
             print((f"    [ok] {g}\n" if ok else f"── [FAIL] {g} ──\n")

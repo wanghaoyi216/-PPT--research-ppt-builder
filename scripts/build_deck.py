@@ -694,6 +694,23 @@ def build(out_dir: Path):
     return script_md
 
 
+def _rebind_palette():
+    """把本模块 import 期绑死的色板 / 栅格常量重新指到 kit 当前生效的值。
+
+    顶部那句 `from kit import BAND, BODY, ...` 在 import 期就把**值**抄进了本模块。
+    `kit.load_theme()` 改的是 kit 自己的全局，抄进来的这一份不会跟着变——于是
+    `--theme midnight` 出来的稿子是「母版深蓝、正文还是 academic-blue 的深灰」，
+    投影上一片糊，闸门三一口气报三十几处对比度不足。
+
+    无 `--theme` 时不调用它：学术蓝那组值与 kit 初值逐字相同，这条修复对默认
+    构建零影响。
+    """
+    global BAND, BODY, BORDER, BROWN, INK, MUTED, SKY, TINT, WHITE, M, CW
+    BAND, BODY, BORDER, BROWN, INK, MUTED, SKY, TINT, WHITE, M, CW = (
+        kit.BAND, kit.BODY, kit.BORDER, kit.BROWN, kit.INK, kit.MUTED, kit.SKY,
+        kit.TINT, kit.WHITE, kit.M, kit.CW)
+
+
 def main():
     ap = argparse.ArgumentParser(
         description="生成示例 deck（15 页，中文科研组会）",
@@ -712,9 +729,10 @@ def main():
     # OUT_DIR 由 verify_all.py 注入；直接手跑时落在当前目录的 out/
     out = Path(os.environ.get("OUT_DIR") or (Path.cwd() / "out"))
     if a.theme:
-        # 必须在建 deck 之前换主题：色板写的是模块级常量，页面函数里 import 的
-        # BAND / TINT 等名字在 import 期就把值绑定了（和 EAK 那条坑同源）。
+        # 必须在建 deck 之前换主题，而且调完还要 rebind：from kit import 来的
+        # BAND / TINT 等名字在 import 期就把值绑死了（和 EAK 那条坑同源）。
         kit.load_theme(name=a.theme)
+        _rebind_palette()
         out = out / f"theme_{a.theme}"
     if a.zh_kaiti:
         # 中文改楷体。必须在任何页面函数 import 之后改 kit.EAK 才生效——

@@ -73,10 +73,11 @@ X4 = [M + i * (BW4 + GAP4) for i in range(4)]
 
 ---
 
-## 2b. 三套主题
+## 2b. 六套主题
 
-三套主题的**栅格与字体完全相同**，只换色板与母版装饰色。原因是这两样和「什么场合」
-无关：换色板是最容易改也最该改的一层，把栅格一起换等于把整份稿重排一遍。
+六套主题的**栅格与字体完全相同**，只换色板、页面底色与母版装饰色。原因是这几样和
+「什么场合」无关：换色板是最容易改也最该改的一层，把栅格一起换等于把整份稿重排一遍。
+底色由主题的 `background` 字段给出（缺省回落 `FFFFFF`，旧 `theme.json` 不用补字段）。
 
 | | `academic-blue` | `scholar-red` | `minimal-mono` |
 |---|---|---|---|
@@ -89,7 +90,19 @@ X4 = [M + i * (BW4 + GAP4) for i in range(4)]
 | 正文 | `微软雅黑` + `Times New Roman` | 同左 | 同左 |
 | 栅格 | M 0.66 / CW 12.01 / CT_TOP 1.66 | 同左 | 同左 |
 
-### 实测对比度（三套都过闸门三）
+| | `midnight` | `forest-green` | `warm-sand` |
+|---|---|---|---|
+| 页面底色 | 深海军蓝 `101C2E` | 白 `FFFFFF` | 暖白 `FBF7F1` |
+| 基色 / 强调块 | 浅蓝 `9AC7EE`（承深字 5.25:1） | 深绿 `1B5E3A`（承白字 7.75:1） | 暖褐 `8A5A2B`（承白字 5.87:1） |
+| 强调色 | `ACC A8CDF0`（浅蓝，装饰用） | `ACC 7A9A4E`（橄榄绿，**只画线不承字**） | `ACC AE7C48`（赭色，**只画线不承字**） |
+| 定位 | 唯一暗底，演示场合 | 浅底绿色相 | 浅底暖色相 |
+| 适合 | 大屏投影、路演、keynote、暗投影环境 | 环境、生态、材料、农业、地学类课题 | 人文、社科、医学、报告附件 |
+| 投影建议 | 暗环境首选；亮环境投影会发灰 | 亮环境 | 亮环境 |
+| 母版 | `assets/themes/midnight.pptx` | `assets/themes/forest-green.pptx` | `assets/themes/warm-sand.pptx` |
+| 正文 | `微软雅黑` + `Times New Roman`，文字色整体反转（深底浅字） | 同左 | 同左 |
+| 栅格 | 同左 | 同左 | 同左 |
+
+### 实测对比度（六套都过闸门三）
 
 `make_neutral_template.py` 打印的原始输出，按角色对齐：
 
@@ -106,7 +119,34 @@ X4 = [M + i * (BW4 + GAP4) for i in range(4)]
 | `ACC` on 白底（装饰线 3.0） | 3.00 | 3.72 | 4.95 |
 | `BROWN` on 白底（**禁用承字** 3.0） | 2.67 | 4.74 | 3.36 |
 
-**两套新主题各有一处比默认更宽裕、也更需要注意**：
+新三套（`report_contrast` 按主题底色判定，行名里的「底色」对白底主题即白底）：
+
+| 组合（门槛） | `midnight` | `forest-green` | `warm-sand` |
+|---|---|---|---|
+| 白字 on `BAND`（大字 3.0 / 小字 4.5） | 5.25 | 7.75 | 5.87 |
+| `SKY` on `BAND`（小字 4.5） | 5.28 | 6.41 | 4.82 |
+| `BAND` on `TINT`（小字 4.5） | 5.56 | 6.77 | 5.02 |
+| `BORDER` on 底色（小字 4.5） | 10.10 | 5.05 | 4.55 |
+| 白字 on `BORDER`（大字 3.0） | 5.52 | 5.05 | 4.86 |
+| 白字 on `NUM`（20pt 粗体 3.0） | 3.65 | 3.96 | 7.98 |
+| `INK` on `TABBG`（小字 4.5） | 7.33 | 11.85 | 11.71 |
+| `INK` on 底色（小字 4.5） | 15.61 | 16.29 | 15.99 |
+| `BODY` on 底色（小字 4.5） | 13.56 | 13.78 | 13.18 |
+| `MUTED` on 底色（小字 4.5） | 9.87 | 5.66 | 5.78 |
+| `ACC` on 底色（装饰线 3.0） | 10.31 | 3.20 | 3.41 |
+| `BROWN` on 底色（**禁用承字** 3.0） | 7.57 | 6.50 | 3.27 |
+
+**新三套的注意点**：
+
+- `midnight`：整套角色语义是反转的——底色深、色块浅、字用近白。`BAND 9AC7EE`
+  承的是**深字**（5.25:1），别按浅底主题的直觉往浅蓝色块上压白字，那样正好写反。
+  图要用 `figstyle` 的 `dark` 预设出深底位图；白底图贴上来会是一块白补丁。
+- `forest-green` / `warm-sand`：`ACC` 只有 3.20 / 3.41:1，和默认主题的 `BROWN` 一样
+  **只画线不承字**；想在白底上承小字的强调色，仍然只有 `minimal-mono` 的陶土橙。
+- 任何非白底主题下，承字颜色一律走 `INK`/`BODY` 角色，**不要在页面代码里写死色号**——
+  写死色号是「母版换了、字没换」的头号原因。
+
+**`scholar-red` 与 `minimal-mono` 各有一处比默认更宽裕、也更需要注意**：
 
 - `scholar-red`：`BAND` 是暗红而不是正红，白字对比度 8.48:1，红底白字非常稳。
   但**红色在偏色投影上会往紫偏**，投影环境偏冷时优先选 `minimal-mono`。
@@ -120,6 +160,7 @@ X4 = [M + i * (BW4 + GAP4) for i in range(4)]
 ```powershell
 python scripts\make_neutral_template.py --theme scholar-red   # 重新生成母版
 python scripts\build_deck.py --theme scholar-red                # 出稿（另存 out/theme_scholar-red/）
+python scripts\build_deck.py --theme midnight                   # 暗底主题：图要配 figstyle 的 dark 预设
 ```
 
 或者在代码里：`kit.load_theme(name="minimal-mono")`（必须在建 deck 之前调用；

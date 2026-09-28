@@ -1,6 +1,7 @@
 {
   "name": "academic-blue",
   "template": "assets/themes/academic-blue.pptx",
+  "background": "FFFFFF",
   "palette": {
     "BAND": "006DB8",
     "BORDER": "4472C4",

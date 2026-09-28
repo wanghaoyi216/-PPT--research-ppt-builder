@@ -1,0 +1,19 @@
+{
+  "name": "midnight",
+  "template": "assets/themes/midnight.pptx",
+  "background": "101C2E",
+  "palette": {
+    "BAND": "9AC7EE",
+    "BORDER": "8FD3D0",
+    "ACC": "A8CDF0",
+    "SKY": "304862",
+    "TABBG": "34536F",
+    "NUM": "7BA6CE",
+    "TINT": "2A4560",
+    "BROWN": "C9A86A",
+    "INK": "F0F5FB",
+    "BODY": "DCE6F2",
+    "MUTED": "B2C7DE",
+    "WHITE": "31476B"
+  }
+}
