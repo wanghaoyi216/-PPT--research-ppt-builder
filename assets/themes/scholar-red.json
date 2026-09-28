@@ -1,6 +1,7 @@
 {
   "name": "scholar-red",
   "template": "assets/themes/scholar-red.pptx",
+  "background": "FFFFFF",
   "palette": {
     "BAND": "8A2B34",
     "BORDER": "9E3A44",

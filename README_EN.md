@@ -8,7 +8,7 @@ open PowerPoint.
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Offline](https://img.shields.io/badge/runtime-local%20%C2%B7%20nothing%20uploaded-2ea44f)](#what-you-need)
-[![Themes](https://img.shields.io/badge/3%20built-in%20themes-0072B2)](#three-themes)
+[![Themes](https://img.shields.io/badge/6%20built-in%20themes-0072B2)](#six-themes)
 [![Gates](https://img.shields.io/badge/4%20validation%20gates-success)](#the-four-gates)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -22,11 +22,12 @@ research-ppt-builder/
 ├── README.md             This file's Chinese counterpart
 ├── requirements.txt
 ├── assets/
-│   ├── themes/           Three theme masters + palette definitions (pptx / json)
+│   ├── themes/           Six theme masters + palette definitions (pptx / json, incl. one dark)
 │   └── figures/          Sample matplotlib figures
 ├── references/           Deep-dive docs, read as needed
 │   ├── design-language.md     Palette, grid, type: and why
-│   ├── page-recipes.md        Geometry for a dozen page types
+│   ├── design-principles.md   Craft: titles, hierarchy, boundaries, layout
+│   ├── page-recipes.md        Geometry for eighteen page types
 │   ├── figures-and-charts.md  Native chart vs matplotlib — which one
 │   ├── image-handling.md      Three ways to handle figures
 │   ├── template-intake.md     Plugging in your own pptx
@@ -62,8 +63,8 @@ snippets of code handle them. The result is an exit code — you can put it in C
 they go; it neither renames nor second-guesses). Images called `1.png` or `2.jpg`
 (it looks at each one, decides where it belongs, and reports back for your sign-off).
 
-**Three themes.** Business blue, scholar red, minimal monochrome. All three pass
-all four gates.
+**Six themes.** Business blue, scholar red, minimal monochrome, plus dark
+`midnight`, deep-green `forest-green` and warm `warm-sand`. All six pass all four gates.
 
 **Two ways to chart.** PowerPoint native charts by default — editable, small.
 matplotlib when the styling needs to be non-standard, with a preset ready to go.
@@ -177,15 +178,16 @@ to be wrong.
 Thresholds are tunable, but **check whether you measured wrong first** rather than
 loosening them. See [`references/qa-gates.md`](references/qa-gates.md).
 
-## Three themes
+## Six themes
 
-Same grid, same type; only the palette and master decoration differ.
+Same grid, same type; only the palette, page background and master decoration differ.
 
-| | academic-blue | scholar-red | minimal-mono |
-|---|---|---|---|
-| Base | `006DB8` | `8A2B34` | `2F2F2F` + terracotta |
-| Good for | Group meetings, external talks | Proposals, defenses, reviews | Printing, external reviewers |
-| Projection | Lit rooms | Lit rooms; reds skew purple on poor projectors | Either |
+| | academic-blue | scholar-red | minimal-mono | midnight | forest-green | warm-sand |
+|---|---|---|---|---|---|---|
+| Background | White | White | White | Navy `101C2E` | White | Warm white `FBF7F1` |
+| Base | `006DB8` | `8A2B34` | `2F2F2F` + terracotta | Light blue `9AC7EE` | Deep green `1B5E3A` | Warm brown `8A5A2B` |
+| Good for | Group meetings, external talks | Proposals, defenses, reviews | Printing, external reviewers | Large screens, keynotes, dark rooms | Environment / ecology / geoscience topics | Humanities / social science / medicine, appendices |
+| Projection | Lit rooms | Lit rooms; reds skew purple on poor projectors | Either | Dark rooms first | Lit rooms | Lit rooms |
 
 Full palette, measured contrast per color, and where each one must not be used:
 [`references/design-language.md`](references/design-language.md).

@@ -1,0 +1,19 @@
+{
+  "name": "warm-sand",
+  "template": "assets/themes/warm-sand.pptx",
+  "background": "FBF7F1",
+  "palette": {
+    "BAND": "8A5A2B",
+    "BORDER": "9A6633",
+    "ACC": "AE7C48",
+    "SKY": "F3E7D8",
+    "TABBG": "E6D3BC",
+    "NUM": "6B4A24",
+    "TINT": "F6ECDD",
+    "BROWN": "A08562",
+    "INK": "241A10",
+    "BODY": "332A20",
+    "MUTED": "6E5F4C",
+    "WHITE": "FFFFFF"
+  }
+}

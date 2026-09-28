@@ -24,10 +24,15 @@
 
 主题
 ----
-三套：`academic-blue`（默认，商务蓝）、`scholar-red`（学术红）、`minimal-mono`（灰阶 + 强调色）。
-色板**不在本文件里写死**，统一读 `kit.BUILTIN_THEMES`——母版和页面用同一份色板，
+六套：`academic-blue`（默认，商务蓝）、`scholar-red`（学术红）、`minimal-mono`（灰阶 + 强调色）、
+`midnight`（深色底）、`forest-green`（深绿）、`warm-sand`（暖砂）。
+色板与**页面底色**都不在本文件里写死，统一读 `kit.BUILTIN_THEMES`——母版和页面用同一份配置，
 两处各写一份迟早会漂，漂了就变成「母版是蓝的、页面是红的」。
 改配色改 kit.py 的 BUILTIN_THEMES，本文件自动跟上。
+
+页面底色走主题 schema 的顶层 `background` 字段（不进 palette）：`lt1` 与母版背景都跟着它走，
+三套浅色主题的值都是 "FFFFFF"，所以老主题的行为一个字没变。深色主题（midnight）靠这个字段
+把整页底色压成深蓝，再配合整套反转的色板（INK 变浅字、WHITE 变面板底）。
 
 用法
 ----
@@ -57,7 +62,8 @@ PKG = Path(__file__).resolve().parent.parent
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 
 PAGE_W, PAGE_H = 13.333, 7.5          # 16:9
-WHITE = "FFFFFF"
+BACKGROUND = "FFFFFF"      # 页面底色默认值：主题没给 background 字段时的回落
+WHITE = "FFFFFF"           # 仅作为「浅色默认值」；装饰里的菱形改用 pal["WHITE"]
 LATIN, EA = "Times New Roman", "微软雅黑"
 
 
@@ -76,15 +82,18 @@ def contrast(fg, bg) -> float:
     return (hi + 0.05) / (lo + 0.05)
 
 
-def theme_colors(pal: dict) -> list:
+def theme_colors(pal: dict, bg: str = BACKGROUND) -> list:
     """色板 → theme1.xml 的 12 个配色角色。
 
     为什么还要单独映射一遍：页面上用的是语义名（BAND / TINT），
     主题配色用的是角色名（accent1 / lt2），用户在 PowerPoint 里
     「改主题配色」时改的是后者。两套名字要对上，设计语言才不会散成两套。
+
+    `lt1` 绑**页面底色**而不是 palette 的 WHITE：WHITE 在深色主题里是「面板底」，
+    和页面底是两回事。写死 WHITE 的话 PowerPoint 里「文本框默认填充」会跟着变错。
     """
     return [
-        ("dk1", pal["INK"]), ("lt1", WHITE), ("dk2", pal["INK"]), ("lt2", pal["TINT"]),
+        ("dk1", pal["INK"]), ("lt1", bg), ("dk2", pal["INK"]), ("lt2", pal["TINT"]),
         ("accent1", pal["ACC"]), ("accent2", pal["BROWN"]), ("accent3", pal["NUM"]),
         ("accent4", pal["BAND"]), ("accent5", pal["BORDER"]), ("accent6", pal["TABBG"]),
         ("hlink", pal["BAND"]), ("folHlink", pal["NUM"]),
@@ -121,7 +130,7 @@ def _shape(tree, x, y, w, h, fill, shape="rect", line=None, lw=1.0, alpha=None):
     tree.append(etree.fromstring(xml))
 
 
-def patch_theme(prs, pal):
+def patch_theme(prs, pal, bg: str = BACKGROUND):
     """改写 theme1.xml 的配色与字体族。
 
     为什么不直接画：主题色一旦对不上，用户在 PowerPoint 里改主题配色时，
@@ -130,7 +139,7 @@ def patch_theme(prs, pal):
     theme = prs.slide_masters[0].part.part_related_by(RT.THEME)
     root = etree.fromstring(theme.blob)
     clr = root.find(f".//{{{A}}}clrScheme")
-    for role, val in theme_colors(pal):
+    for role, val in theme_colors(pal, bg):
         el = clr.find(f"{{{A}}}{role}")
         for ch in list(el):
             el.remove(ch)
@@ -143,27 +152,28 @@ def patch_theme(prs, pal):
                                  encoding="UTF-8", standalone=True)
 
 
-def white_background(prs):
-    """母版显式设白底。
+def set_page_background(prs, bg: str = BACKGROUND):
+    """母版显式设页面底色。函数名从 `white_background` 改过来：底色不再是白。
 
     不设的话背景色来自主题 lt1，用户换主题时正文页会跟着变色——
-    而我们的对比度是按白底算的（SKY/ACC 在白底上根本不能承字）。
+    而我们的对比度是按**主题底色**算的（SKY/ACC 在底色上根本不能承字）。
+    所以底色必须在母版里写死成显式值，不能靠 lt1 隐式继承。
     """
     m = prs.slide_masters[0]
-    bg = m._element.find(qn("p:cSld")).find(qn("p:bg"))
-    if bg is not None:
-        m._element.find(qn("p:cSld")).remove(bg)
+    bg_el = m._element.find(qn("p:cSld")).find(qn("p:bg"))
+    if bg_el is not None:
+        m._element.find(qn("p:cSld")).remove(bg_el)
     xml = (
         '<p:bg xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
         'xmlns:a="%s"><p:bgPr><a:solidFill><a:srgbClr val="%s"/></a:solidFill>'
-        '<a:effectLst/></p:bgPr></p:bg>' % (A, WHITE)
+        '<a:effectLst/></p:bgPr></p:bg>' % (A, bg)
     )
     cs = m._element.find(qn("p:cSld"))
     cs.insert(0, etree.fromstring(xml))
 
 
 def decorate(prs, pal):
-    """给三个版式加装饰形状（两栏内容沿用正文页装饰）。
+    """给四个版式加装饰形状（两栏内容沿用正文页装饰）。
 
     装饰只吃 6 个颜色角色：BAND（标题带/分隔线）、ACC（细线）、SKY（大面底色）、
     TABBG（抽象圆）、BORDER（抽象菱形底）、BROWN（右上角色块）。
@@ -172,9 +182,10 @@ def decorate(prs, pal):
     """
     BAND, ACC, SKY = pal["BAND"], pal["ACC"], pal["SKY"]
     TABBG, BORDER, BROWN = pal["TABBG"], pal["BORDER"], pal["BROWN"]
+    WHITE = pal["WHITE"]          # 菱形标记：浅色主题是白、深色主题是面板色
     scratch = prs.slides.add_slide(prs.slide_masters[0].slide_layouts[6])
     trees = {i: prs.slide_masters[0].slide_layouts[i].shapes._spTree
-             for i in (0, 1, 3, 10)}
+             for i in (0, 1, 2, 3, 10)}
 
     # ── 封面：左下低饱和几何块，右侧 x≥6.6 留给文字列，不做任何遮挡 ──
     t = trees[0]
@@ -191,6 +202,22 @@ def decorate(prs, pal):
         _shape(ti, 11.12, 0.30, 2.08, 0.90, BROWN)            # 右上色块
         _shape(ti, 12.02, 0.53, 0.44, 0.44, WHITE, shape="diamond")  # 抽象标记
         _shape(ti, 11.60, 0.53, 0.24, 0.44, WHITE, shape="diamond", alpha='<a:alpha val="70000"/>')
+
+    # ── 节标题：左侧整条竖带 + 右侧大面积留白 ──
+    # 这个版式默认没有任何装饰形状，是套设计语言里唯一「裸」的版式。
+    # 章节分隔页的内容区按 1.66 起算，但整页只有「章节号 + 一句标题」两行字，
+    # 不压装饰的话闸门四必判「顶部大空隙 + 覆盖率 10%」。左侧整条竖带把页面
+    # 分成「章节标记 | 留白」两栏，右侧文字列从 x 6.95 起排（与封面同一条竖线）。
+    t = trees[2]
+    _shape(t, 0.00, 0.00, 4.30, PAGE_H, BAND)                 # 左整条竖带
+    _shape(t, 0.00, 0.00, 0.055, PAGE_H, ACC)                 # 左缘细线
+    _shape(t, 1.05, 3.10, 2.20, 2.20, WHITE, shape="diamond", alpha='<a:alpha val="70000"/>')
+    _shape(t, 1.85, 3.60, 1.00, 1.00, BROWN, shape="ellipse", alpha='<a:alpha val="42000"/>')
+    _shape(t, 5.10, 2.30, 7.23, 0.025, ACC)                   # 右侧顶部细线
+    _shape(t, 5.10, 6.30, 7.23, 0.025, ACC)                   # 右侧底部细线
+    _shape(t, 11.12, 0.60, 2.08, 0.90, BROWN)                 # 右上色块（家族特征）
+    _shape(t, 12.02, 0.83, 0.44, 0.44, WHITE, shape="diamond")
+    _shape(t, 11.60, 0.83, 0.24, 0.44, WHITE, shape="diamond", alpha='<a:alpha val="70000"/>')
 
     # ── 结尾：一整块低饱和底 + 上下细线 + 一条小色线 ──
     # 结尾页也要占满内容区。它天然没有标题带（内容区顶仍按 1.66 算），
@@ -242,13 +269,16 @@ def strip_thumbnail(path: Path):
 
 
 def build(out: Path, theme_name: str = "academic-blue"):
+    th = kit.BUILTIN_THEMES[theme_name]
     pal = dict(kit.NEUTRAL_THEME["palette"])
-    pal.update(kit.BUILTIN_THEMES[theme_name]["palette"])
+    pal.update(th["palette"])
+    # 页面底色：旧主题没有这个字段时回落到 FFFFFF，行为与旧版完全一致
+    bg = th.get("background") or kit.NEUTRAL_THEME.get("background") or BACKGROUND
     prs = Presentation()
     prs.slide_width = Inches(PAGE_W)
     prs.slide_height = Inches(PAGE_H)
-    patch_theme(prs, pal)
-    white_background(prs)
+    patch_theme(prs, pal, bg)
+    set_page_background(prs, bg)
     for i, lay in enumerate(prs.slide_masters[0].slide_layouts):
         if i in LAYOUT_NAMES:
             lay.name = LAYOUT_NAMES[i]
@@ -282,6 +312,9 @@ def build(out: Path, theme_name: str = "academic-blue"):
     # 封面文字列起排在右侧：左下压着几何装饰块，遮住就没地方排字了
     set_ph(lays[0], "CENTER_TITLE", 6.95, 1.80, 5.72, 1.10)
     set_ph(lays[0], "SUBTITLE", 6.95, 3.10, 5.72, 2.60)
+    # 节标题的文字列同样排在右侧：左侧 x<4.30 压着整条 BAND 竖带
+    set_ph(lays[2], "TITLE", 6.95, 2.90, 5.72, 1.30)
+    set_ph(lays[2], "BODY", 6.95, 4.30, 5.72, 1.20)
     set_ph(lays[10], "BODY", M, CT_TOP, CW, CT_BOT - CT_TOP)
     set_ph(lays[10], "TITLE", M, CT_TOP, CW, 0.90)
 
@@ -300,33 +333,44 @@ def write_theme_json(theme_name: str) -> Path:
     会让这份 json 换台机器就失效。
     """
     tpl = f"assets/themes/{theme_name}.pptx"
+    th = kit.BUILTIN_THEMES[theme_name]
     data = {"name": theme_name, "template": tpl,
-            "palette": dict(kit.BUILTIN_THEMES[theme_name]["palette"])}
+            "background": th.get("background") or BACKGROUND,
+            "palette": dict(th["palette"])}
     p = kit.theme_json(theme_name)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return p
 
 
-def report_contrast(pal: dict):
+def report_contrast(pal: dict, bg: str = BACKGROUND):
     """打印本主题每个颜色的实测对比度。
 
     注释里写的对比度是「算出来的」，不是「估出来的」：改色时先看这张表，
     低于正文 4.5 / 大字 3.0 的组合不要用。
+
+    `bg` 是**页面底色**（主题 schema 顶层的 background 字段），不是 palette 的 WHITE。
+    原来这 6 条检查全拿 WHITE 当底，是因为浅色主题里两个值恰好都是 FFFFFF；
+    深色主题下它们分家，检查仍要落在页面底上——那才是正文真正坐着的颜色。
     """
     w = pal["WHITE"]
     checks = [
         ("白字 on BAND", w, pal["BAND"]), ("SKY on BAND", pal["SKY"], pal["BAND"]),
-        ("BAND on TINT", pal["BAND"], pal["TINT"]), ("BORDER on 白底", pal["BORDER"], w),
+        ("BAND on TINT", pal["BAND"], pal["TINT"]), ("BORDER on 底色", pal["BORDER"], bg),
         ("白字 on BORDER", w, pal["BORDER"]), ("白字 on NUM", w, pal["NUM"]),
-        ("INK on TABBG", pal["INK"], pal["TABBG"]), ("INK on 白底", pal["INK"], w),
-        ("BODY on 白底", pal["BODY"], w), ("MUTED on 白底", pal["MUTED"], w),
-        ("ACC on 白底（装饰线）", pal["ACC"], w), ("BROWN on 白底（禁用承字）", pal["BROWN"], w),
+        ("INK on TABBG", pal["INK"], pal["TABBG"]), ("INK on 底色", pal["INK"], bg),
+        ("BODY on 底色", pal["BODY"], bg), ("MUTED on 底色", pal["MUTED"], bg),
+        ("ACC on 底色（装饰线）", pal["ACC"], bg), ("BROWN on 底色（禁用承字）", pal["BROWN"], bg),
     ]
-    for name, fg, bg in checks:
-        r = contrast(fg, bg)
+    lows = []
+    for name, fg, _bg in checks:
+        r = contrast(fg, _bg)
         flag = "ok " if r >= 4.5 else ("大字 " if r >= 3.0 else "低  ")
+        if flag.startswith("低"):
+            lows.append(name)
         print(f"    {flag}{r:5.2f}:1  {name}")
+    print(f"  页面底色 {bg}｜" + ("无「低」" if not lows else f"有「低」：{lows}"))
+    return lows
 
 
 def main():
@@ -349,7 +393,9 @@ def main():
               + ", ".join(f"{s.name.split()[0]}" for s in deco[:4]) + " …")
     pal = dict(kit.NEUTRAL_THEME["palette"])
     pal.update(kit.BUILTIN_THEMES[a.theme]["palette"])
-    report_contrast(pal)
+    bg = kit.BUILTIN_THEMES[a.theme].get("background") or BACKGROUND
+    print(f"  页面底色 {bg}")
+    report_contrast(pal, bg)
     js = write_theme_json(a.theme)
     print(f"  主题 json → {js.relative_to(PKG)}")
     # academic-blue 另存一份老名字：既有文档、脚本与 SKILL.md 都还指着它
